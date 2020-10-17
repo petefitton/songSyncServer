@@ -17,6 +17,7 @@ app.get('/', (req, res) => {
 })
 
 app.use('/users', require('./controllers/users'))
+app.use('/rooms', require('./controllers/rooms'))
 
 app.listen(port, () => {
   console.log('Port is running on', port)

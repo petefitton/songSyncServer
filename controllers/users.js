@@ -61,13 +61,25 @@ router.post('/login', (req, res) => {
 })
 
 router.get('/profile/:userId', (req, res) => {
-  // find fave rooms from req.user
-  db.room.findAll({where: {userId: req.params.userId}})
-  .then(userRooms => {
-    if (userRooms.length === 0) {
+  // let queries = [
+  //   db.room.findAll({where: {userId: req.params.userId}}),
+  //   db.usersRooms.findAll({where: {userId: req.params.userId}})
+  // ]
+  // db.room.findAll({where: {userId: req.params.userId}})
+  // .then(userRooms => {
+  //   if (userRooms.length === 0) {
+  //     res.send([''])
+  //   } else {
+  //     res.send(userRooms)
+  //   }
+  // })
+  // .catch(err => console.log(err))
+  db.user.findOne({where: {id: req.params.userId}, include: [db.room]})
+  .then(userInfo => {
+    if (userInfo.rooms.length === 0) {
       res.send([''])
     } else {
-      res.send(userRooms)
+      res.send(userInfo)
     }
   })
   .catch(err => console.log(err))
