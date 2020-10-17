@@ -54,8 +54,23 @@ router.post('/login', (req, res) => {
           return res.status(400).json({password: 'Password or email is incorrect'})
         }
       })
+      .catch(err => console.log(err))
     }
   })
+  .catch(err => console.log(err))
+})
+
+router.get('/profile/:userId', (req, res) => {
+  // find fave rooms from req.user
+  db.room.findAll({where: {userId: req.params.userId}})
+  .then(userRooms => {
+    if (userRooms.length === 0) {
+      res.send([''])
+    } else {
+      res.send(userRooms)
+    }
+  })
+  .catch(err => console.log(err))
 })
 
 module.exports = router;
