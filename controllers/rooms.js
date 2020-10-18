@@ -25,4 +25,12 @@ router.post('/create', (req, res) => {
   .catch(err => console.log(err))
 })
 
+router.post('/find', (req, res) => {
+  console.log(req.body);
+  db.room.findOne({where: {name: req.body.roomname}})
+  .then(room => {
+    res.send(room)
+  })
+})
+
 module.exports = router;
