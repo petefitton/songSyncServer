@@ -2,6 +2,7 @@ require('dotenv').config()
 const express = require('express')
 const router = express.Router()
 const db = require('../models')
+const { subscribe, unsubscribe } = require('./users')
 
 router.post('/create', (req, res) => {
   // create room in db
@@ -17,7 +18,18 @@ router.post('/create', (req, res) => {
   })
   .then(([room, wasCreated]) => {
     if (wasCreated) {
-      res.send(room)
+      db.usersRooms.create({
+        userId: req.body.roomOwner,
+        roomId: room.id
+      })
+      .then(userRoom => {
+        if (userRoom) {
+          res.send(room)
+        } else {
+          res.status(400).send()
+        }
+      })
+      .catch(err => console.log(err))
     } else {
       res.status(400).send()
     }
@@ -31,6 +43,65 @@ router.post('/find', (req, res) => {
   .then(room => {
     res.send(room)
   })
+})
+
+router.post('/msgInit', (req, res) => {
+  // TODO see if user has permission to get messages (has used password and favorited the room)
+  // req.body.user.id
+  // then do the following:
+  db.message.findAll({where: {roomId: req.body.room.id}, include: [db.user]})
+  .then(msgs => {
+    res.send(msgs)
+  })
+})
+
+router.post('/is-subscribed', (req, res) => {
+  db.usersRooms.findOne({
+    where: {
+      userId: req.body.userId,
+      roomId: req.body.roomId,
+    }
+  })
+  .then(userRoom => {
+    if (userRoom) {
+      res.send(true)
+    } else {
+      res.send(false)
+    }
+  })
+  .catch(err => console.log(err))
+})
+
+router.post('/subscribe', (req, res) => {
+  db.usersRooms.create({
+    userId: req.body.userId,
+    roomId: req.body.roomId,
+  })
+  .then(userRoom => {
+    if (userRoom) {
+      res.send(true)
+    } else {
+      res.send(false)
+    }
+  })
+  .catch(err => console.log(err))
+})
+
+router.post('/unsubscribe', (req, res) => {
+  db.usersRooms.destroy({
+    where: {
+      userId: req.body.userId,
+      roomId: req.body.roomId,
+    }
+  })
+  .then(destroyedNum => {
+    if (destroyedNum) {
+      res.send(true)
+    } else {
+      res.send(false)
+    }
+  })
+  .catch(err => console.log(err))
 })
 
 module.exports = router;

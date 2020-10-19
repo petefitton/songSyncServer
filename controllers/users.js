@@ -66,7 +66,7 @@ router.get('/profile/:userId', (req, res) => {
     if (userInfo.rooms.length === 0) {
       res.send([''])
     } else {
-      res.send(userInfo)
+      res.send(userInfo.rooms)
     }
   })
   .catch(err => console.log(err))
