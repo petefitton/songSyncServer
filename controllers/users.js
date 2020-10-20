@@ -72,4 +72,42 @@ router.get('/profile/:userId', (req, res) => {
   .catch(err => console.log(err))
 })
 
+router.post('/userInfo', (req, res) => {
+  db.user.findOne({where: {id: req.body.user.id}})
+  .then(user => {
+    if (user) {
+      res.send(user)
+    } else {
+      res.status(400).send()
+    }
+  })
+})
+
+router.post('/update-email', (req, res) => {
+  db.user.update({email: req.body.email}, {where: {id: req.body.user.id}})
+  .then(user => {
+    if (user) {
+      res.send(true)
+    } else {
+      res.status(400).send()
+    }
+  })
+})
+
+router.post('/update-password', (req, res) => {
+  bcrypt.hash(req.body.password, 10)
+  .then(hash => {
+    db.user.update({password: hash}, {where: {id: req.body.user.id}})
+    .then(user => {
+      if (user) {
+        res.send(true)
+      } else {
+        res.status(400).send()
+      }
+    })
+    .catch(err => console.log(err))
+  })
+  .catch(err => console.log(err))
+})
+
 module.exports = router;

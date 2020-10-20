@@ -2,37 +2,41 @@ require('dotenv').config()
 const express = require('express')
 const router = express.Router()
 const db = require('../models')
-const { subscribe, unsubscribe } = require('./users')
+const bcrypt = require('bcryptjs')
 
 router.post('/create', (req, res) => {
   // create room in db
-  db.room.findOrCreate({
-    where: {
-      name: req.body.roomname
-    },
-    defaults: {
-      userId: req.body.roomOwner,
-      password: req.body.roompassword,
-      isPublic: req.body.roomIsPub
-    }
-  })
-  .then(([room, wasCreated]) => {
-    if (wasCreated) {
-      db.usersRooms.create({
+  bcrypt.hash(req.body.roompassword, 10)
+  .then(hash => {
+    db.room.findOrCreate({
+      where: {
+        name: req.body.roomname
+      },
+      defaults: {
         userId: req.body.roomOwner,
-        roomId: room.id
-      })
-      .then(userRoom => {
-        if (userRoom) {
-          res.send(room)
-        } else {
-          res.status(400).send()
-        }
-      })
-      .catch(err => console.log(err))
-    } else {
-      res.status(400).send()
-    }
+        password: hash,
+        isPublic: req.body.roomIsPub
+      }
+    })
+    .then(([room, wasCreated]) => {
+      if (wasCreated) {
+        db.usersRooms.create({
+          userId: req.body.roomOwner,
+          roomId: room.id
+        })
+        .then(userRoom => {
+          if (userRoom) {
+            res.send(room)
+          } else {
+            res.status(400).send()
+          }
+        })
+        .catch(err => console.log(err))
+      } else {
+        res.status(400).send()
+      }
+    })
+    .catch(err => console.log(err))
   })
   .catch(err => console.log(err))
 })
@@ -99,6 +103,18 @@ router.post('/unsubscribe', (req, res) => {
       res.send(true)
     } else {
       res.send(false)
+    }
+  })
+  .catch(err => console.log(err))
+})
+
+router.get('/public', (req, res) => {
+  db.room.findAll({where: {isPublic: true}})
+  .then(pubRooms => {
+    if (pubRooms) {
+      res.send(pubRooms)
+    } else {
+      res.status(404).send()
     }
   })
   .catch(err => console.log(err))
