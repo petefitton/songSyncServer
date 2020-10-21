@@ -121,15 +121,19 @@ router.post('/is-subscribed', (req, res) => {
 })
 
 router.post('/subscribe', (req, res) => {
-  db.usersRooms.create({
+  db.usersRooms.findOrCreate({
     userId: req.body.userId,
     roomId: req.body.roomId,
   })
-  .then(userRoom => {
-    if (userRoom) {
+  .then(([userRoom, wasCreated]) => {
+    if (wasCreated) {
       res.send(true)
     } else {
-      res.send(false)
+      if (userRoom) {
+        res.send(true)
+      } else {
+        res.send(false)
+      }
     }
   })
   .catch(err => console.log(err))
