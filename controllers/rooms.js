@@ -83,6 +83,14 @@ router.post('/find', (req, res) => {
 })
 
 router.post('/msgInit', (req, res) => {
+  let findMsgs = () => {
+    db.message.findAll({where: {roomId: req.body.room.id}, include: [db.user]})
+    .then(msgs => {
+      res.send(msgs)
+    })
+    .catch(err => console.log(err))
+  }
+
   db.usersRooms.findOne({
     where: {
       userId: req.body.user.id,
@@ -91,13 +99,19 @@ router.post('/msgInit', (req, res) => {
   })
   .then(subscribedRoom => {
     if (subscribedRoom) {
-      db.message.findAll({where: {roomId: req.body.room.id}, include: [db.user]})
-      .then(msgs => {
-        res.send(msgs)
+      findMsgs()
+    } else {
+      db.room.findOne({where: {
+        id: req.body.room.id
+      }})
+      .then(room => {
+        if (room.isPublic) {
+          findMsgs()
+        } else {
+          res.status(404).send()
+        }
       })
       .catch(err => console.log(err))
-    } else {
-      res.status(404).send()
     }
   })
   .catch(err => console.log(err))
