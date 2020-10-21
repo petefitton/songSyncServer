@@ -7,21 +7,21 @@ const { subscribe } = require('./users')
 
 router.post('/create', (req, res) => {
   // create room in db
-  if (req.body.roompassword === "") {
+  if (req.body.password === "") {
     db.room.findOrCreate({
       where: {
-        name: req.body.roomname
+        name: req.body.name
       },
       defaults: {
-        userId: req.body.roomOwner,
+        userId: req.body.userId,
         password: '',
-        isPublic: req.body.roomIsPub
+        isPublic: req.body.isPublic
       }
     })
     .then(([room, wasCreated]) => {
       if (wasCreated) {
         db.usersRooms.create({
-          userId: req.body.roomOwner,
+          userId: req.body.userId,
           roomId: room.id
         })
         .then(userRoom => {
@@ -38,22 +38,22 @@ router.post('/create', (req, res) => {
     })
     .catch(err => console.log(err))
   } else {
-    bcrypt.hash(req.body.roompassword, 10)
+    bcrypt.hash(req.body.password, 10)
     .then(hash => {
       db.room.findOrCreate({
         where: {
-          name: req.body.roomname
+          name: req.body.name
         },
         defaults: {
-          userId: req.body.roomOwner,
+          userId: req.body.userId,
           password: hash,
-          isPublic: req.body.roomIsPub
+          isPublic: req.body.isPublic
         }
       })
       .then(([room, wasCreated]) => {
         if (wasCreated) {
           db.usersRooms.create({
-            userId: req.body.roomOwner,
+            userId: req.body.userId,
             roomId: room.id
           })
           .then(userRoom => {
