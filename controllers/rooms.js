@@ -6,15 +6,14 @@ const bcrypt = require('bcryptjs')
 
 router.post('/create', (req, res) => {
   // create room in db
-  bcrypt.hash(req.body.roompassword, 10)
-  .then(hash => {
+  if (req.body.roompassword === "") {
     db.room.findOrCreate({
       where: {
         name: req.body.roomname
       },
       defaults: {
         userId: req.body.roomOwner,
-        password: hash,
+        password: '',
         isPublic: req.body.roomIsPub
       }
     })
@@ -37,8 +36,41 @@ router.post('/create', (req, res) => {
       }
     })
     .catch(err => console.log(err))
-  })
-  .catch(err => console.log(err))
+  } else {
+    bcrypt.hash(req.body.roompassword, 10)
+    .then(hash => {
+      db.room.findOrCreate({
+        where: {
+          name: req.body.roomname
+        },
+        defaults: {
+          userId: req.body.roomOwner,
+          password: hash,
+          isPublic: req.body.roomIsPub
+        }
+      })
+      .then(([room, wasCreated]) => {
+        if (wasCreated) {
+          db.usersRooms.create({
+            userId: req.body.roomOwner,
+            roomId: room.id
+          })
+          .then(userRoom => {
+            if (userRoom) {
+              res.send(room)
+            } else {
+              res.status(400).send()
+            }
+          })
+          .catch(err => console.log(err))
+        } else {
+          res.status(400).send()
+        }
+      })
+      .catch(err => console.log(err))
+    })
+    .catch(err => console.log(err))
+  }
 })
 
 router.post('/find', (req, res) => {
