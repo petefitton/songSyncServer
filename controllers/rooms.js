@@ -3,6 +3,7 @@ const express = require('express')
 const router = express.Router()
 const db = require('../models')
 const bcrypt = require('bcryptjs')
+const { subscribe } = require('./users')
 
 router.post('/create', (req, res) => {
   // create room in db
@@ -82,13 +83,24 @@ router.post('/find', (req, res) => {
 })
 
 router.post('/msgInit', (req, res) => {
-  // TODO see if user has permission to get messages (has used password and favorited the room)
-  // req.body.user.id
-  // then do the following:
-  db.message.findAll({where: {roomId: req.body.room.id}, include: [db.user]})
-  .then(msgs => {
-    res.send(msgs)
+  db.usersRooms.findOne({
+    where: {
+      userId: req.body.user.id,
+      roomId: req.body.room.id
+    }
   })
+  .then(subscribedRoom => {
+    if (subscribedRoom) {
+      db.message.findAll({where: {roomId: req.body.room.id}, include: [db.user]})
+      .then(msgs => {
+        res.send(msgs)
+      })
+      .catch(err => console.log(err))
+    } else {
+      res.status(404).send()
+    }
+  })
+  .catch(err => console.log(err))
 })
 
 router.post('/is-subscribed', (req, res) => {
