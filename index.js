@@ -5,15 +5,11 @@ const server = require('http').createServer(app)
 const io = require('socket.io')(server, {})
 const cors = require('cors')
 const port = process.env.PORT || 8000
-const passport = require('passport')
 const db = require('./models')
 
 app.use(cors())
 app.use(express.urlencoded({extended: false}))
 app.use(express.json())
-
-app.use(passport.initialize())
-require('./config/passport')(passport)
 
 app.get('/', (req, res) => {
   res.send("Hello World")
